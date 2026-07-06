@@ -5,11 +5,11 @@ change.
 
 ## Current Phase
 
-- Initial setup completed
+- UI/UX Styling
 
 ## Current Goal
 
-- Clean up Next.js boilerplate
+- Implement custom color theme in `globals.css`
 
 ## Completed
 
@@ -17,6 +17,12 @@ change.
 - Deleted default SVG assets from the `public` directory
 - Replaced `page.tsx` with a minimal centered layout rendering "PAWPower"
 - Verified the build succeeds via `npm run build`
+- Initialized Shadcn/UI with Tailwind CSS v4 configuration
+- Installed `lucide-react`, `clsx`, and `tailwind-merge`
+- Created `lib/utils.ts` with `cn()` helper
+- Added primitive UI components: Button, Card, Dialog, Input, Tabs, Textarea, ScrollArea
+- Verified components import and render correctly in `page.tsx`
+- Applied custom color theme from `ui-context.md` to `globals.css` (Brand Forest Green, Honey Amber accents)
 
 ## In Progress
 
