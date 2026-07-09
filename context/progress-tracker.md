@@ -27,6 +27,8 @@ change.
 - Integrated UI layouts into `app/layout.tsx` with brand-conforming Google Fonts (`Plus Jakarta Sans`, `Lora`)
 - Created responsive aesthetic page shells for `/dashboard`, `/calendar`, `/vets`, and `/scan` routes to ensure complete navigation connectivity
 - Added "How Scan Works" section to the landing page (`app/page.tsx`) with 3 responsive columns (Camera, Brain, FileText icons), matching the existing Features Grid card pattern and CSS token styling (`context/feature-spec/04-landing-page.md`)
+- Built About page (`app/about/page.tsx`) with a dark brand hero section (Core Vision), three stacked pillar cards (Computer Vision AI Triage, PostGIS Geospatial Intelligence, Full-Lifecycle Health Tracking), and a closing CTA strip — all styled via CSS custom property tokens, fully responsive single-column on mobile (`context/feature-spec/05-about-page.md`)
+- Updated `Header.tsx` to include About as the first item in `navigationItems`, automatically surfacing in both desktop and mobile nav
 
 ## In Progress
 

@@ -8,6 +8,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navigationItems = [
+  { name: "About", href: "/about" },
   { name: "Dashboard", href: "/dashboard" },
   { name: "Calendar", href: "/calendar" },
   { name: "Vet Finder", href: "/vets" },
