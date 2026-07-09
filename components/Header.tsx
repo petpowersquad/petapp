@@ -56,7 +56,7 @@ export function Header() {
             })}
             
             {/* Scan Pet CTA Link */}
-            <Link href="/scan" className={buttonVariants({ variant: "secondary", size: "sm", className: "ml-2 font-semibold shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all" })}>
+            <Link href="/scan" className={buttonVariants({ variant: "secondary", size: "sm", className: "ml-2 font-semibold shadow-sm hover:scale-[1.02] active:scale-[0.98] hover:text-secondary transition-all" })}>
               Scan Pet
             </Link>
           </nav>

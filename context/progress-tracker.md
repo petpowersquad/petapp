@@ -9,7 +9,7 @@ change.
 
 ## Current Goal
 
-- Implement custom color theme in `globals.css`
+- Implement pet monitoring and AI pet care features
 
 ## Completed
 
@@ -29,6 +29,9 @@ change.
 - Added "How Scan Works" section to the landing page (`app/page.tsx`) with 3 responsive columns (Camera, Brain, FileText icons), matching the existing Features Grid card pattern and CSS token styling (`context/feature-spec/04-landing-page.md`)
 - Built About page (`app/about/page.tsx`) with a dark brand hero section (Core Vision), three stacked pillar cards (Computer Vision AI Triage, PostGIS Geospatial Intelligence, Full-Lifecycle Health Tracking), and a closing CTA strip — all styled via CSS custom property tokens, fully responsive single-column on mobile (`context/feature-spec/05-about-page.md`)
 - Updated `Header.tsx` to include About as the first item in `navigationItems`, automatically surfacing in both desktop and mobile nav
+- Created static Privacy Policy page (`app/privacy/page.tsx`) with 12 professional clauses covering Clerk authentication, Supabase database hosting, PostGIS location data handling, and a firm commitment that uploaded pet diagnostic images are never sold or stored long-term (`context/feature-spec/06-t&s-privacy.md`)
+- Created static Terms of Service page (`app/terms/page.tsx`) with 15 clauses including a prominent warning card specifying that the AI Triage Engine is a guidance assistant only and NOT a certified replacement for professional emergency veterinary care (`context/feature-spec/06-t&s-privacy.md`)
+- Updated `Footer.tsx`: wired Privacy Policy link to `/privacy` and Terms of Service link to `/terms` using Next.js `Link` components; updated link classes to `text-text-muted hover:text-text-primary transition-colors` for theme-safe styling
 
 ## In Progress
 
@@ -46,7 +49,9 @@ change.
 
 - Kept styling minimal using Tailwind CSS v4 directives.
 - Used google fonts to match visual requirements.
+- Privacy and Terms pages are fully static (React Server Components, no `"use client"`) — zero JS bundle overhead.
 
 ## Session Notes
 
 - Navigation, global header, footer, and basic dashboard pages are fully functional and compiled. Ready for core database and AI features.
+- All legal pages (`/privacy`, `/terms`) are prerendered as static content. 11 total routes confirmed in build output.

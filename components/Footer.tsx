@@ -19,12 +19,12 @@ export function Footer() {
             </span>
           </div>
 
-          {/* Right: Mock Footer Links */}
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-white/60">
-            <Link href="#" className="hover:text-secondary transition-colors">
+          {/* Right: Footer Links */}
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-text-muted">
+            <Link href="/privacy" className="hover:text-secondary transition-colors">
               Privacy Policy
             </Link>
-            <Link href="#" className="hover:text-secondary transition-colors">
+            <Link href="/terms" className="hover:text-secondary transition-colors">
               Terms of Service
             </Link>
             <Link href="#" className="hover:text-secondary transition-colors">

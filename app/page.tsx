@@ -156,7 +156,7 @@ export default function Home() {
               className={buttonVariants({
                 variant: "secondary",
                 size: "lg",
-                className: "font-semibold px-8 hover:scale-[1.02] active:scale-[0.98] transition-all",
+                className: "font-semibold px-8 hover:scale-[1.02] active:scale-[0.98] hover:text-secondary transition-all",
               })}
             >
               Get Started Now
