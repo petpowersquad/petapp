@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { PawPrint, Sparkles, Calendar, MapPin, Shield, ChevronRight, Activity } from "lucide-react";
+import { PawPrint, Sparkles, Calendar, MapPin, Shield, ChevronRight, Activity, Camera, Brain, FileText } from "lucide-react";
 
 export default function Home() {
   return (
@@ -81,6 +81,57 @@ export default function Home() {
             </CardHeader>
             <CardContent className="text-xs text-text-muted leading-relaxed">
               In critical situations, easily search and route to the closest emergency clinics. Vets can also self-register to share availability with owners.
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* How Scan Works Section */}
+      <section className="py-16 px-6 max-w-7xl mx-auto w-full space-y-12">
+        <div className="text-center space-y-2">
+          <h2 className="font-serif text-3xl font-bold text-primary tracking-tight">How scan works</h2>
+          <p className="text-sm text-text-muted max-w-lg mx-auto">
+            Three simple steps from photo to actionable insight.
+          </p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-3">
+          {/* Step 1: Snap a photo */}
+          <Card className="border-border hover:shadow-md transition-shadow duration-300">
+            <CardHeader>
+              <div className="h-10 w-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary mb-3">
+                <Camera className="h-5 w-5" />
+              </div>
+              <CardTitle className="text-lg font-bold text-primary">Snap a photo</CardTitle>
+            </CardHeader>
+            <CardContent className="text-xs text-text-muted leading-relaxed">
+              Point your phone at your pet, anywhere, any light.
+            </CardContent>
+          </Card>
+
+          {/* Step 2: AI reads it */}
+          <Card className="border-border hover:shadow-md transition-shadow duration-300">
+            <CardHeader>
+              <div className="h-10 w-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary mb-3">
+                <Brain className="h-5 w-5" />
+              </div>
+              <CardTitle className="text-lg font-bold text-primary">AI reads it</CardTitle>
+            </CardHeader>
+            <CardContent className="text-xs text-text-muted leading-relaxed">
+              Rocky checks breed markers and visible signs.
+            </CardContent>
+          </Card>
+
+          {/* Step 3: Get your report */}
+          <Card className="border-border hover:shadow-md transition-shadow duration-300">
+            <CardHeader>
+              <div className="h-10 w-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary mb-3">
+                <FileText className="h-5 w-5" />
+              </div>
+              <CardTitle className="text-lg font-bold text-primary">Get your report</CardTitle>
+            </CardHeader>
+            <CardContent className="text-xs text-text-muted leading-relaxed">
+              Results land instantly and save to your pet&apos;s timeline.
             </CardContent>
           </Card>
         </div>
