@@ -26,6 +26,7 @@ change.
 - Defined and implemented global navigation header and footer layouts (`context/feature-spec/03-build-nav.md`)
 - Integrated UI layouts into `app/layout.tsx` with brand-conforming Google Fonts (`Plus Jakarta Sans`, `Lora`)
 - Created responsive aesthetic page shells for `/dashboard`, `/calendar`, `/vets`, and `/scan` routes to ensure complete navigation connectivity
+- Added "How Scan Works" section to the landing page (`app/page.tsx`) with 3 responsive columns (Camera, Brain, FileText icons), matching the existing Features Grid card pattern and CSS token styling (`context/feature-spec/04-landing-page.md`)
 
 ## In Progress
 
