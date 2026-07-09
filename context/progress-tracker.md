@@ -5,7 +5,7 @@ change.
 
 ## Current Phase
 
-- UI/UX Styling
+- Authentication & Infrastructure
 
 ## Current Goal
 
@@ -31,7 +31,15 @@ change.
 - Updated `Header.tsx` to include About as the first item in `navigationItems`, automatically surfacing in both desktop and mobile nav
 - Created static Privacy Policy page (`app/privacy/page.tsx`) with 12 professional clauses covering Clerk authentication, Supabase database hosting, PostGIS location data handling, and a firm commitment that uploaded pet diagnostic images are never sold or stored long-term (`context/feature-spec/06-t&s-privacy.md`)
 - Created static Terms of Service page (`app/terms/page.tsx`) with 15 clauses including a prominent warning card specifying that the AI Triage Engine is a guidance assistant only and NOT a certified replacement for professional emergency veterinary care (`context/feature-spec/06-t&s-privacy.md`)
-- Updated `Footer.tsx`: wired Privacy Policy link to `/privacy` and Terms of Service link to `/terms` using Next.js `Link` components; updated link classes to `text-text-muted hover:text-text-primary transition-colors` for theme-safe styling
+- Updated `Footer.tsx`: wired Privacy Policy link to `/privacy` and Terms of Service link to `/terms`; hover color set to honey amber (`text-secondary`) for branded link styling
+- Initialized Clerk authentication via `clerk init --app app_3G8XpXoboYuJ11Alr1hQtGO2G7V` (`context/feature-spec/07-init-clerk.md`):
+  - Installed Clerk CLI v2.0.0 (user-local npm prefix `~/.npm-global`)
+  - Authenticated as anthonybadawi100@gmail.com
+  - `clerk init` auto-detected Next.js App Router, installed `@clerk/nextjs`, scaffolded `proxy.ts` (middleware), `app/sign-in/[[...sign-in]]/page.tsx`, `app/sign-up/[[...sign-up]]/page.tsx`, and wrote env keys to `.env.local`
+  - Added `'/__clerk/:path*'` to `proxy.ts` `config.matcher` after `/(api|trpc)(.*)`
+  - Installed `@clerk/ui` and applied brand theme via `ClerkProvider appearance` prop in `app/layout.tsx` (forest green primary, honey amber accents, Plus Jakarta Sans font, `rounded-2xl` cards — no shadcn CSS import)
+  - Updated `Header.tsx`: replaced User icon placeholder with `SignInButton`, `SignUpButton` (both `mode="modal"`), and `UserButton` wrapped in `Show when="signed-out/signed-in"` — both desktop and mobile panels covered
+  - `clerk doctor` all critical checks green; build exit 0, TypeScript clean, 11 routes confirmed
 
 ## In Progress
 
@@ -48,10 +56,15 @@ change.
 ## Architecture Decisions
 
 - Kept styling minimal using Tailwind CSS v4 directives.
-- Used google fonts to match visual requirements.
+- Used Google Fonts to match visual requirements.
 - Privacy and Terms pages are fully static (React Server Components, no `"use client"`) — zero JS bundle overhead.
+- Clerk middleware lives in `proxy.ts` (not `middleware.ts`) — this is what `clerk init` generates for this version.
+- `ClerkProvider` is inside `<body>`, not wrapping `<html>` — required by Clerk.
+- Auth modals open in-place (`mode="modal"`) to avoid full-page redirects during sign-in/sign-up.
+- `@clerk/nextjs` in this version uses `Show when="signed-in/out"` instead of `SignedIn`/`SignedOut` components.
 
 ## Session Notes
 
 - Navigation, global header, footer, and basic dashboard pages are fully functional and compiled. Ready for core database and AI features.
 - All legal pages (`/privacy`, `/terms`) are prerendered as static content. 11 total routes confirmed in build output.
+- Clerk is fully operational. Sign-in/sign-up flow available via modal from the header nav on every page.
