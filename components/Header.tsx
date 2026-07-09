@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PawPrint, Menu, X, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navigationItems = [
@@ -55,10 +55,8 @@ export function Header() {
             })}
             
             {/* Scan Pet CTA Link */}
-            <Link href="/scan" className="ml-2">
-              <Button variant="secondary" size="sm" className="font-semibold shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all">
-                Scan Pet
-              </Button>
+            <Link href="/scan" className={buttonVariants({ variant: "secondary", size: "sm", className: "ml-2 font-semibold shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all" })}>
+              Scan Pet
             </Link>
           </nav>
 
@@ -107,10 +105,8 @@ export function Header() {
             })}
           </div>
           <div className="pt-2 border-t border-white/10 flex flex-col gap-3">
-            <Link href="/scan" onClick={() => setIsOpen(false)} className="w-full">
-              <Button variant="secondary" className="w-full justify-center font-semibold">
-                Scan Pet
-              </Button>
+            <Link href="/scan" onClick={() => setIsOpen(false)} className={buttonVariants({ variant: "secondary", className: "w-full justify-center font-semibold" })}>
+              Scan Pet
             </Link>
             <div className="flex items-center gap-3 px-3 py-2 text-white/80">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10">

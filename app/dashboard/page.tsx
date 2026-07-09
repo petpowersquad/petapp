@@ -101,7 +101,10 @@ export default function Dashboard() {
               {tasks.map((task) => (
                 <div key={task.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-card hover:bg-slate-50/50 transition-colors">
                   <div className="flex items-center gap-3">
-                    <button className="text-text-muted hover:text-primary transition-colors">
+                    <button
+                      className="text-text-muted hover:text-primary transition-colors"
+                      aria-label={`Mark "${task.task}" as complete`}
+                    >
                       <CheckCircle2 className="h-5 w-5" />
                     </button>
                     <div>

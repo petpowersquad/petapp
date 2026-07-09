@@ -65,7 +65,7 @@ export default function CalendarPage() {
               {/* Calendar cells */}
               <div className="grid grid-cols-7 gap-1.5">
                 {calendarCells.map((day, idx) => {
-                  const hasEvents = day && eventsByDay[day];
+                  const dayEvents = day ? eventsByDay[day] : undefined;
                   const isCurrentDay = day === 9; // Let's mock today as July 9, 2026
                   return (
                     <div
@@ -81,9 +81,9 @@ export default function CalendarPage() {
                       <span className={`text-xs ${isCurrentDay ? "text-secondary font-extrabold" : "text-primary"}`}>
                         {day}
                       </span>
-                      {hasEvents && (
+                      {dayEvents && (
                         <div className="space-y-1">
-                          {eventsByDay[day].map((ev, eIdx) => (
+                          {dayEvents.map((ev, eIdx) => (
                             <div
                               key={eIdx}
                               className={`text-[9px] truncate px-1 py-0.5 rounded font-medium border ${

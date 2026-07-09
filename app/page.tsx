@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { PawPrint, Sparkles, Calendar, MapPin, Shield, ChevronRight, Activity } from "lucide-react";
 
@@ -22,15 +22,11 @@ export default function Home() {
           </p>
 
           <div className="flex flex-wrap justify-center gap-4 pt-4">
-            <Link href="/scan">
-              <Button variant="secondary" size="lg" className="font-semibold px-6 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all">
-                Try AI Scan <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
+            <Link href="/scan" className={buttonVariants({ variant: "secondary", size: "lg", className: "font-semibold px-6 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all" })}>
+              Try AI Scan <ChevronRight className="h-4 w-4 ml-1" />
             </Link>
-            <Link href="/dashboard">
-              <Button variant="outline" size="lg" className="font-semibold px-6 border-border hover:bg-slate-50">
-                Go to Dashboard
-              </Button>
+            <Link href="/dashboard" className={buttonVariants({ variant: "outline", size: "lg", className: "font-semibold px-6 border-border hover:bg-slate-50" })}>
+              Go to Dashboard
             </Link>
           </div>
         </div>
@@ -99,10 +95,8 @@ export default function Home() {
             Create profiles, keep track of vital dates, and check symptoms anytime with our intelligent assistant.
           </p>
           <div className="pt-2">
-            <Link href="/scan">
-              <Button variant="secondary" size="lg" className="font-semibold px-8 hover:scale-[1.02] active:scale-[0.98] transition-all">
-                Get Started Now
-              </Button>
+            <Link href="/scan" className={buttonVariants({ variant: "secondary", size: "lg", className: "font-semibold px-8 hover:scale-[1.02] active:scale-[0.98] transition-all" })}>
+              Get Started Now
             </Link>
           </div>
         </div>

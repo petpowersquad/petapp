@@ -22,6 +22,13 @@ export default function ScanPage() {
     }
   };
 
+  const revokeAndClear = () => {
+    setSelectedImage((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -29,16 +36,21 @@ export default function ScanPage() {
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
-      const url = URL.createObjectURL(file);
-      setSelectedImage(url);
+      if (!file.type.startsWith("image/")) return;
+      setSelectedImage((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return URL.createObjectURL(file);
+      });
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const url = URL.createObjectURL(file);
-      setSelectedImage(url);
+      setSelectedImage((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return URL.createObjectURL(file);
+      });
     }
   };
 
@@ -51,7 +63,7 @@ export default function ScanPage() {
   };
 
   const resetScanner = () => {
-    setSelectedImage(null);
+    revokeAndClear();
     setScanResult(false);
   };
 
@@ -92,11 +104,16 @@ export default function ScanPage() {
                   <p className="text-xs text-text-muted mb-4">or click to browse from files</p>
                   
                   <div className="flex gap-3">
-                    <label className="cursor-pointer">
+                    <label className="cursor-pointer" tabIndex={0} onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        e.currentTarget.querySelector("input")?.click(); 
+                      }
+                    }}>
                       <input 
                         type="file" 
                         accept="image/*" 
-                        className="hidden" 
+                        className="absolute h-0 w-0 opacity-0" 
                         onChange={handleFileChange} 
                       />
                       <span className={cn(buttonVariants({ variant: "outline", size: "sm" }), "font-semibold gap-1.5")}>
@@ -119,7 +136,7 @@ export default function ScanPage() {
                       className="max-h-full max-w-full object-contain"
                     />
                     <button 
-                      onClick={() => setSelectedImage(null)}
+                      onClick={revokeAndClear}
                       className="absolute top-3 right-3 bg-primary/80 hover:bg-primary text-white text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm transition-colors"
                     >
                       Remove
@@ -127,7 +144,7 @@ export default function ScanPage() {
                   </div>
 
                   <div className="flex justify-end gap-3">
-                    <Button variant="outline" onClick={() => setSelectedImage(null)} disabled={isScanning}>
+                    <Button variant="outline" onClick={revokeAndClear} disabled={isScanning}>
                       Cancel
                     </Button>
                     <Button 
