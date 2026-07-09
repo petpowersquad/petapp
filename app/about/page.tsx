@@ -1,4 +1,12 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import { Camera, MapPin, ClipboardList } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "About | PAWPower",
+  description:
+    "Learn how PAWPower combines computer vision AI, PostGIS geospatial intelligence, and full-lifecycle health tracking to help pet owners make faster, clearer care decisions.",
+};
 
 // ─── Data ──────────────────────────────────────────────────────────────────
 
@@ -140,13 +148,13 @@ export default function AboutPage() {
             handler or welcoming your first companion. Accurate triage is now
             just a scan away.
           </p>
-          <a
+          <Link
             href="/scan"
             className="mt-8 inline-flex items-center gap-2 rounded-lg bg-[var(--accent-primary)] px-6 py-3 text-sm font-semibold text-[var(--bg-brand-dark)] shadow-sm transition-all hover:opacity-90 active:scale-95"
           >
             <Camera className="h-4 w-4" aria-hidden="true" />
             Scan Your Pet
-          </a>
+          </Link>
         </div>
       </section>
     </main>
