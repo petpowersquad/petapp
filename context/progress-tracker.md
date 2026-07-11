@@ -43,7 +43,7 @@ change.
 
 ## In Progress
 
-- None.
+- None
 
 ## Next Up
 
@@ -68,3 +68,9 @@ change.
 - Navigation, global header, footer, and basic dashboard pages are fully functional and compiled. Ready for core database and AI features.
 - All legal pages (`/privacy`, `/terms`) are prerendered as static content. 11 total routes confirmed in build output.
 - Clerk is fully operational. Sign-in/sign-up flow available via modal from the header nav on every page.
+- Supabase database schema is fully specified: migration file contains all tables, RLS policies, and helper functions. Seed file contains 35 breeds (20 dogs, 15 cats) with complete care information ready for `supabase db seed`.
+- Initialized Supabase database schema (`context/feature-spec/08-init-supabase-db.md`):
+  - Migration `supabase/migrations/20260711183216_initial_schema.sql` confirmed containing full schema: `breeds`, `pets`, `health_scans`, `pet_events`, `tickets`, `ticket_messages`, `vets` tables with RLS enabled and all policies
+  - `get_my_role()` helper function reads `app_role` from Clerk JWT for role-based RLS policies
+  - `update_modified_column()` trigger keeps `tickets.updated_at` current
+  - Created `supabase/seed.sql` with 20 dog breeds and 15 cat breeds — all rows include `name`, `species`, `care_food`, `care_exercise`, `care_sleep`, `care_health_notes`
