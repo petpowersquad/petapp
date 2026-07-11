@@ -17,7 +17,7 @@ const navigationItems = [
   { name: "About", href: "/about" },
   { name: "Dashboard", href: "/dashboard" },
   { name: "Calendar", href: "/calendar" },
-  { name: "Vet Finder", href: "/vets" },
+  /*{ name: "Vet Finder", href: "/vets" },*/
 ];
 
 export function Header() {

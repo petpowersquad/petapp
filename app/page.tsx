@@ -11,6 +11,10 @@ import {
   Camera,
   Brain,
   FileText,
+  Clipboard,
+  Logs,
+  ListTodo,
+  History,
 } from "lucide-react";
 
 const features = [
@@ -29,11 +33,11 @@ const features = [
       "Schedule vaccination clinics, recurring tick treatments, and exercise goals. View personalized checklists synced per-pet to coordinate routines effortlessly.",
   },
   {
-    icon: MapPin,
-    title: "Local Vet Finder",
-    description: "PostGIS geolocation indexing",
+    icon: History,
+    title: "Health Timeline",
+    description: "Logs of old scan reports",
     content:
-      "In critical situations, easily search and route to the closest emergency clinics. Vets can also self-register to share availability with owners.",
+      "In cases where you need to refer to older analysis of you pets, view all saved old scan and reports for each of you pets. Allow to send them to your vet through sharable link that expires.",
   },
 ] as const;
 
@@ -122,20 +126,61 @@ export default function Home() {
       </section>
 
       {/* How Scan Works Section */}
-      <section className="py-16 px-6 max-w-7xl mx-auto w-full space-y-12">
-        <div className="text-center space-y-2">
-          <h2 className="font-serif text-3xl font-bold text-primary tracking-tight">
-            How scan works
-          </h2>
-          <p className="text-sm text-text-muted max-w-lg mx-auto">
-            Three simple steps from photo to actionable insight.
-          </p>
-        </div>
+      <section className="py-16 px-6 bg-[var(--bg-brand-dark)]">
+        <div className="max-w-5xl mx-auto space-y-12">
+          <div className="text-center space-y-2">
+            <h2 className="font-serif text-3xl font-bold text-white tracking-tight">
+              How scan works
+            </h2>
+            <p className="text-sm text-white/60 max-w-lg mx-auto">
+              Three simple steps from photo to actionable insight.
+            </p>
+          </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
-          {scanSteps.map((step) => (
-            <InfoCard key={step.title} {...step} />
-          ))}
+          {/* Stepper */}
+          <div className="flex flex-col md:flex-row items-center justify-center gap-0">
+            {scanSteps.map((step, index) => {
+              const Icon = step.icon;
+              const stepNumber = index + 1;
+              return (
+                <div key={step.title} className="flex flex-col md:flex-row items-center flex-1 min-w-0">
+                  {/* Step card */}
+                  <div className="flex flex-col items-center text-center gap-4 px-6 py-8 flex-1">
+                    {/* Number + icon */}
+                    <div className="relative">
+                      <div className="h-16 w-16 rounded-full bg-[var(--accent-primary)] flex items-center justify-center shadow-lg">
+                        <Icon className="h-7 w-7 text-[var(--bg-brand-dark)]" />
+                      </div>
+                      <span className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-white text-[var(--bg-brand-dark)] text-xs font-bold flex items-center justify-center shadow">
+                        {stepNumber}
+                      </span>
+                    </div>
+                    <div className="space-y-1.5">
+                      <h3 className="text-white font-semibold text-lg leading-snug">{step.title}</h3>
+                      <p className="text-white/60 text-sm leading-relaxed max-w-[180px] mx-auto">{step.content}</p>
+                    </div>
+                  </div>
+
+                  {/* Arrow connector — only between steps */}
+                  {index < scanSteps.length - 1 && (
+                    <>
+                      {/* Desktop: horizontal arrow */}
+                      <div className="hidden md:flex items-center text-[var(--accent-primary)] flex-shrink-0">
+                        <ChevronRight className="h-8 w-8" strokeWidth={2.5} />
+                      </div>
+                      {/* Mobile: vertical arrow */}
+                      <div className="flex md:hidden flex-col items-center text-[var(--accent-primary)] py-1">
+                        <div className="w-px h-6 bg-[var(--accent-primary)]/40" />
+                        <svg width="16" height="10" viewBox="0 0 16 10" fill="none" className="text-[var(--accent-primary)]">
+                          <path d="M8 10L0 0h16L8 10z" fill="currentColor" />
+                        </svg>
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
 
