@@ -14,6 +14,7 @@ $$;
 create or replace function public.get_my_id()
 returns text
 language sql stable
+set search_path = ''
 as $$
   select auth.jwt() ->> 'sub';
 $$;
