@@ -50,7 +50,7 @@ change.
 
 ## In Progress
 
-- Scan page pet selector dropdown (`context/feature-spec/12-scan-pet.md`)
+- None
 
 ## Next Up
 
@@ -113,7 +113,14 @@ change.
   - Build exit 0, TypeScript clean, 15 routes confirmed
 - Implemented pet selector dropdown on scan page (`context/feature-spec/12-scan-pet.md`):
   - `app/api/pets/route.ts` — added `GET` handler; returns `[{id, name, species}]` ordered by name, RLS-enforced via authenticated Supabase client
-  - `components/ui/select.tsx` — installed shadcn Select component
+  - `components/ui/select.tsx` — installed shadcn Select component (Base UI); `itemToStringLabel` prop on `Select.Root` used to resolve selected item display text — `textValue` prop does not exist on Base UI `SelectItem`
   - `app/scan/page.tsx` — rewritten as async RSC; fetches user's pets server-side via `createAuthenticatedClient()`, passes to `ScanClient`
-  - `app/scan/ScanClient.tsx` — new `"use client"` component; contains pet selector in page header (shadcn Select, styled with CSS tokens, responsive: stacks on mobile, side-by-side on `sm+`); empty state shown when user has no pets; `Analyze Image` button disabled until a pet is selected; selected pet name shown in card header and triage report; reads `?petId=` query param to pre-select; `Suspense` wrapper retained for `useSearchParams`
+  - `app/scan/ScanClient.tsx` — new `"use client"` component; pet selector in card header using shadcn Select; `Analyze Image` button disabled until a pet is selected; reads `?petId=` query param to pre-select
   - Build exit 0, TypeScript clean, 13 routes confirmed
+- Implemented full calendar functionality (`context/feature-spec/13-calendar-functionality.md`):
+  - `app/api/events/route.ts` — `GET` (with optional `?range=week` filter) and `POST` handlers; POST validates pet ownership via RLS before inserting; GET returns all or this-week's events
+  - `app/api/events/[event_id]/route.ts` — `DELETE` handler; verifies ownership via RLS, returns 404 if no row matched
+  - `app/calendar/CalendarClient.tsx` — new `"use client"` component: clickable day cells update the schedule panel, month navigation (prev/next), add event modal (title, description, event type dropdown, datetime picker, pet selector) with backdrop blur overlay matching AddPetModal pattern, delete with bin icon, per-pet color coding via stable palette, real-time state updates on create/delete
+  - `app/calendar/page.tsx` — rewritten as async RSC; fetches all user events + pets server-side, passes to `CalendarClient`
+  - `app/dashboard/DashboardClient.tsx` — `CareChecklist` now re-fetches `GET /api/events?range=week` on mount so events added via calendar appear without full page reload
+  - Build exit 0, TypeScript clean, 15 routes confirmed
