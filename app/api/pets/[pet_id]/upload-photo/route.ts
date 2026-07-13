@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 
-const BUCKET = "pet-photos";
+const BUCKET = "pet-images";
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 

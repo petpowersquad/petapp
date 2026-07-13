@@ -82,3 +82,7 @@ change.
   - `update_modified_column()` trigger keeps `tickets.updated_at` current
   - Created `supabase/seed.sql` with 20 dog breeds and 15 cat breeds — all rows include `name`, `species`, `care_food`, `care_exercise`, `care_sleep`, `care_health_notes`
 - Pet profile page `/pets/[pet_id]` is fully implemented: owner-only server-side access guard, pet photo upload, pet info card, latest AI health insight, scrollable scan history, scrollable events list, and a Scan CTA button. Dashboard pet cards link to profile pages. Build clean at 12 routes.
+- Added storage bucket setup (`context/feature-spec/10-sql-bucket.md`):
+  - Created `supabase/migrations/20260713150131_add_storage_buckets.sql` — creates public `pet-images` bucket; RLS policies for authenticated upload (folder must match `get_my_id()`), owner-scoped update/delete, public read, and support/admin full management
+  - Updated `app/api/pets/[pet_id]/upload-photo/route.ts` — `BUCKET` constant changed from `pet-photos` to `pet-images` to match the new migration
+  - Build exit 0, TypeScript clean, 12 routes confirmed
