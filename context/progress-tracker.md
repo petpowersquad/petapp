@@ -62,8 +62,6 @@ change.
 
 ## Recent Changes (Session: 2026-07-13)
 
-## Recent Changes (Session: 2026-07-13)
-
 - Fixed RLS violation on `POST /api/pets` (code `42501`) by migrating from service-role bypass to Clerk JWT + Supabase RLS (Option 1):
   - Created Clerk JWT template named `supabase` in Clerk Dashboard (Configure → JWT Templates → Supabase); enabled custom signing key (HS256) using Supabase project JWT secret; `sub` is injected automatically by Clerk (reserved claim)
   - Created `utils/supabase/server-auth.ts` — `createAuthenticatedClient()` calls `getToken({ template: "supabase" })` and passes the JWT as `Authorization: Bearer` header; disables Supabase session persistence since Clerk owns auth
