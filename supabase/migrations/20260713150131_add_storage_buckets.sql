@@ -3,8 +3,9 @@ insert into storage.buckets (id, name, public)
 values ('pet-images', 'pet-images', true)
 on conflict (id) do nothing;
 
--- Ensure RLS is active on the objects layer
-alter table storage.objects enable row level security;
+-- Note: RLS on storage.objects is managed by Supabase internally.
+-- Attempting to ALTER TABLE storage.objects requires owner privileges
+-- that the migration runner does not have and is not needed here.
 
 -- 1. Allow authenticated users to upload images into their own folder name path
 create policy "Authenticated users can upload pet images"
