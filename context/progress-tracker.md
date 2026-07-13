@@ -5,7 +5,7 @@ change.
 
 ## Current Phase
 
-- Authentication & Infrastructure
+- Pet Profile & Core Feature Implementation
 
 ## Current Goal
 
@@ -40,6 +40,13 @@ change.
   - Installed `@clerk/ui` and applied brand theme via `ClerkProvider appearance` prop in `app/layout.tsx` (forest green primary, honey amber accents, Plus Jakarta Sans font, `rounded-2xl` cards — no shadcn CSS import)
   - Updated `Header.tsx`: replaced User icon placeholder with `SignInButton`, `SignUpButton` (both `mode="modal"`), and `UserButton` wrapped in `Show when="signed-out/signed-in"` — both desktop and mobile panels covered
   - `clerk doctor` all critical checks green; build exit 0, TypeScript clean, 11 routes confirmed
+- Implemented `/pets/[pet_id]` pet profile page (`context/feature-spec/09-pet-profile.md`):
+  - `app/pets/[pet_id]/page.tsx` — React Server Component; fetches pet (with breed join), latest scan, full scan history, and events from Supabase via server client; double-enforces owner-only access (`owner_id !== userId` → `notFound()`); two-row responsive grid layout
+  - `app/pets/[pet_id]/PetImageUpload.tsx` — `"use client"` component; shows stored photo via `next/image` with hover overlay to change; shows upload placeholder with amber Upload icon if no photo; validates file type and size client-side; POSTs to API route and updates URL state on success
+  - `app/api/pets/[pet_id]/upload-photo/route.ts` — POST handler; validates Clerk auth, verifies `owner_id`, validates MIME type and file size; uploads to `pet-photos` Supabase Storage bucket (upsert); writes `photo_url` back to `pets` row
+  - `app/dashboard/page.tsx` — imported `next/link`; pet cards now wrapped in `<Link href="/pets/{id}">` for navigation
+  - `next.config.ts` — added `toeaffagbvydiodfpvyj.supabase.co` to `images.remotePatterns` for `next/image`
+  - Build exit 0, TypeScript clean, 12 routes confirmed
 
 ## In Progress
 
@@ -53,6 +60,22 @@ change.
 
 - None at the moment.
 
+## Recent Changes (Session: 2026-07-13)
+
+- Fixed RLS violation on `POST /api/pets` (code `42501`) by migrating from service-role bypass to Clerk JWT + Supabase RLS (Option 1):
+  - Created Clerk JWT template named `supabase` in Clerk Dashboard (Configure → JWT Templates → Supabase); enabled custom signing key (HS256) using Supabase project JWT secret; `sub` is injected automatically by Clerk (reserved claim)
+  - Created `utils/supabase/server-auth.ts` — `createAuthenticatedClient()` calls `getToken({ template: "supabase" })` and passes the JWT as `Authorization: Bearer` header; disables Supabase session persistence since Clerk owns auth
+  - Created `utils/supabase/admin.ts` — `createAdminClient()` using `SUPABASE_SERVICE_ROLE_KEY`; available for privileged server-side operations (not used for storage uploads)
+  - Updated `app/api/pets/route.ts` — switched from cookie-based `createClient` to `createAuthenticatedClient()`; RLS now enforces insert correctly
+  - Updated `app/api/events/[event_id]/toggle/route.ts` — same switch; RLS policy `Owners can manage events` now active
+  - Updated `app/dashboard/page.tsx` — switched to `createAuthenticatedClient()`; removed `cookies()` dependency
+  - Updated `app/api/pets/[pet_id]/upload-photo/route.ts` — DB ownership check uses `createAuthenticatedClient()` (RLS active); storage upsert uses `createAuthenticatedClient()` (RLS active, Supabase sets `owner_id` from JWT so update/delete policies match); DB `photo_url` update uses authenticated client
+  - Updated `app/pets/[pet_id]/page.tsx` — was missed in initial migration; switched from cookie-based client to `createAuthenticatedClient()`; this was causing owner's own pet profile to return 404
+  - `SUPABASE_SERVICE_ROLE_KEY` must be added to `.env.local` (Supabase Dashboard → Project Settings → Data API → service_role key)
+- Fixed dashboard layout: "Your Pets" and "AI Health Insights" cards now have equal height on desktop (`md:items-stretch` on grid, `h-full` on card and wrapper div)
+- Restyled pet cards in "Your Pets" section: Forest Green (`--bg-brand-dark`) background, white pet name, white/60 muted subtext, honey amber "Active" badge
+- Restyled Care Checklist tabs: active tab uses Forest Green background with white text; inactive tab uses muted grey; count badge on active tab uses honey amber
+
 ## Architecture Decisions
 
 - Kept styling minimal using Tailwind CSS v4 directives.
@@ -62,6 +85,7 @@ change.
 - `ClerkProvider` is inside `<body>`, not wrapping `<html>` — required by Clerk.
 - Auth modals open in-place (`mode="modal"`) to avoid full-page redirects during sign-in/sign-up.
 - `@clerk/nextjs` in this version uses `Show when="signed-in/out"` instead of `SignedIn`/`SignedOut` components.
+- Clerk + Supabase auth uses JWT template pattern (not service-role bypass): `createAuthenticatedClient()` passes a Clerk-signed JWT to Supabase so RLS policies using `auth.jwt() ->> 'sub'` and `get_my_id()` work correctly. `createAdminClient()` (service role) is not used for storage uploads — the authenticated client is used so Supabase sets `owner_id` from the JWT, enabling the owner-scoped update/delete storage policies to match.
 
 ## Session Notes
 
@@ -74,3 +98,16 @@ change.
   - `get_my_role()` helper function reads `app_role` from Clerk JWT for role-based RLS policies
   - `update_modified_column()` trigger keeps `tickets.updated_at` current
   - Created `supabase/seed.sql` with 20 dog breeds and 15 cat breeds — all rows include `name`, `species`, `care_food`, `care_exercise`, `care_sleep`, `care_health_notes`
+- Pet profile page `/pets/[pet_id]` is fully implemented: owner-only server-side access guard, pet photo upload, pet info card, latest AI health insight, scrollable scan history, scrollable events list, and a Scan CTA button. Dashboard pet cards link to profile pages. Build clean at 12 routes.
+- Added storage bucket setup (`context/feature-spec/10-sql-bucket.md`):
+  - Created `supabase/migrations/20260713150131_add_storage_buckets.sql` — creates public `pet-images` bucket; RLS policies for authenticated upload (folder must match `get_my_id()`), owner-scoped update/delete (match on `owner_id`), public read, and support/admin full management
+  - Updated `app/api/pets/[pet_id]/upload-photo/route.ts` — `BUCKET` constant changed from `pet-photos` to `pet-images` to match the new migration; storage upload uses `createAuthenticatedClient()` so Supabase automatically sets `owner_id` from the JWT — enabling the update/delete ownership policies; `createAdminClient()` is not used for storage
+  - Created `supabase/migrations/20260713180433_drop_public_storage_select_policy.sql` — drops the `"Anyone can view pet images"` SELECT policy; public bucket CDN access (direct URLs) does not evaluate `storage.objects` RLS at all, so the policy was unnecessary but allowed unauthenticated enumeration of all storage rows (exposing Clerk user IDs and pet IDs)
+  - Build exit 0, TypeScript clean, 12 routes confirmed
+- Updated dashboard with real Supabase data and interactive features (`context/feature-spec/11-dashboard-after-db.md`):
+  - `app/api/pets/route.ts` — POST handler; validates auth, name, species; inserts pet into `pets` table; returns `{id, name, species, photo_url}`
+  - `app/api/events/[event_id]/toggle/route.ts` — PATCH handler; toggles `is_completed` on a `pet_events` row; protected by RLS
+  - `app/dashboard/DashboardClient.tsx` — `"use client"` component containing: Add Pet modal (manual + AI-image tabs, JPEG/PNG upload with progress bar, preview, form fields, submit to `/api/pets` then `/api/pets/[id]/upload-photo`), Care Checklist with Tabs (To Do / Completed), per-task toggle (Circle → CheckCircle2, optimistic update), scrollable lists, Health Insights (warning scans only, empty state), Recent Scans (scrollable, empty state), toast notifications (bottom-right, success/error), redirect to `/scan?preview=...` after pet creation
+  - `app/dashboard/page.tsx` — rewritten as async RSC; fetches pets, scans (last 20), and weekly events from Supabase; passes to `DashboardClient`
+  - `app/scan/page.tsx` — refactored into `ScanPageInner` + `export default ScanPage` with `<Suspense>` wrapper; reads `?preview=` query param via `useSearchParams` and seeds image state so newly created pets' photos show immediately
+  - Build exit 0, TypeScript clean, 15 routes confirmed
