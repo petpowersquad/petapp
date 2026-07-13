@@ -1,12 +1,13 @@
+import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertTriangle, Activity, Calendar as CalendarIcon, History, Plus, Heart } from "lucide-react";
 
 export default function Dashboard() {
-  // Mock data for pets
+  // Mock data for pets — `id` will be a real UUID once the DB is wired up
   const pets = [
-    { name: "Max", species: "Dog", breed: "Golden Retriever", age: "2 years", status: "Healthy" },
-    { name: "Luna", species: "Cat", breed: "Siamese", age: "1 year", status: "Requires Scan" },
+    { id: "mock-max-id", name: "Max", species: "Dog", breed: "Golden Retriever", age: "2 years", status: "Healthy" },
+    { id: "mock-luna-id", name: "Luna", species: "Cat", breed: "Siamese", age: "1 year", status: "Requires Scan" },
   ];
 
   // Mock data for tasks
@@ -50,7 +51,11 @@ export default function Dashboard() {
             <CardContent>
               <div className="grid gap-4 sm:grid-cols-2 pt-2">
                 {pets.map((pet) => (
-                  <div key={pet.name} className="flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:shadow-md transition-all duration-200">
+                  <Link
+                    key={pet.id}
+                    href={`/pets/${pet.id}`}
+                    className="flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:shadow-md transition-all duration-200 no-underline"
+                  >
                     <div>
                       <div className="font-semibold text-primary">{pet.name}</div>
                       <div className="text-xs text-text-muted">{pet.breed} • {pet.age}</div>
@@ -60,7 +65,7 @@ export default function Dashboard() {
                     }`}>
                       {pet.status}
                     </span>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </CardContent>

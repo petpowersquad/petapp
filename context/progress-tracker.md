@@ -5,7 +5,7 @@ change.
 
 ## Current Phase
 
-- Authentication & Infrastructure
+- Pet Profile & Core Feature Implementation
 
 ## Current Goal
 
@@ -40,6 +40,13 @@ change.
   - Installed `@clerk/ui` and applied brand theme via `ClerkProvider appearance` prop in `app/layout.tsx` (forest green primary, honey amber accents, Plus Jakarta Sans font, `rounded-2xl` cards — no shadcn CSS import)
   - Updated `Header.tsx`: replaced User icon placeholder with `SignInButton`, `SignUpButton` (both `mode="modal"`), and `UserButton` wrapped in `Show when="signed-out/signed-in"` — both desktop and mobile panels covered
   - `clerk doctor` all critical checks green; build exit 0, TypeScript clean, 11 routes confirmed
+- Implemented `/pets/[pet_id]` pet profile page (`context/feature-spec/09-pet-profile.md`):
+  - `app/pets/[pet_id]/page.tsx` — React Server Component; fetches pet (with breed join), latest scan, full scan history, and events from Supabase via server client; double-enforces owner-only access (`owner_id !== userId` → `notFound()`); two-row responsive grid layout
+  - `app/pets/[pet_id]/PetImageUpload.tsx` — `"use client"` component; shows stored photo via `next/image` with hover overlay to change; shows upload placeholder with amber Upload icon if no photo; validates file type and size client-side; POSTs to API route and updates URL state on success
+  - `app/api/pets/[pet_id]/upload-photo/route.ts` — POST handler; validates Clerk auth, verifies `owner_id`, validates MIME type and file size; uploads to `pet-photos` Supabase Storage bucket (upsert); writes `photo_url` back to `pets` row
+  - `app/dashboard/page.tsx` — imported `next/link`; pet cards now wrapped in `<Link href="/pets/{id}">` for navigation
+  - `next.config.ts` — added `toeaffagbvydiodfpvyj.supabase.co` to `images.remotePatterns` for `next/image`
+  - Build exit 0, TypeScript clean, 12 routes confirmed
 
 ## In Progress
 
@@ -74,3 +81,4 @@ change.
   - `get_my_role()` helper function reads `app_role` from Clerk JWT for role-based RLS policies
   - `update_modified_column()` trigger keeps `tickets.updated_at` current
   - Created `supabase/seed.sql` with 20 dog breeds and 15 cat breeds — all rows include `name`, `species`, `care_food`, `care_exercise`, `care_sleep`, `care_health_notes`
+- Pet profile page `/pets/[pet_id]` is fully implemented: owner-only server-side access guard, pet photo upload, pet info card, latest AI health insight, scrollable scan history, scrollable events list, and a Scan CTA button. Dashboard pet cards link to profile pages. Build clean at 12 routes.
