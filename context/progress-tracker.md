@@ -65,11 +65,11 @@ change.
 - Fixed RLS violation on `POST /api/pets` (code `42501`) by migrating from service-role bypass to Clerk JWT + Supabase RLS (Option 1):
   - Created Clerk JWT template named `supabase` in Clerk Dashboard (Configure → JWT Templates → Supabase); enabled custom signing key (HS256) using Supabase project JWT secret; `sub` is injected automatically by Clerk (reserved claim)
   - Created `utils/supabase/server-auth.ts` — `createAuthenticatedClient()` calls `getToken({ template: "supabase" })` and passes the JWT as `Authorization: Bearer` header; disables Supabase session persistence since Clerk owns auth
-  - Created `utils/supabase/admin.ts` — `createAdminClient()` using `SUPABASE_SERVICE_ROLE_KEY`; used exclusively for storage upsert in upload-photo route
+  - Created `utils/supabase/admin.ts` — `createAdminClient()` using `SUPABASE_SERVICE_ROLE_KEY`; available for privileged server-side operations (not used for storage uploads)
   - Updated `app/api/pets/route.ts` — switched from cookie-based `createClient` to `createAuthenticatedClient()`; RLS now enforces insert correctly
   - Updated `app/api/events/[event_id]/toggle/route.ts` — same switch; RLS policy `Owners can manage events` now active
   - Updated `app/dashboard/page.tsx` — switched to `createAuthenticatedClient()`; removed `cookies()` dependency
-  - Updated `app/api/pets/[pet_id]/upload-photo/route.ts` — DB ownership check uses `createAuthenticatedClient()` (RLS active); storage upsert uses `createAdminClient()` (bypasses storage RLS for upsert); DB `photo_url` update uses authenticated client
+  - Updated `app/api/pets/[pet_id]/upload-photo/route.ts` — DB ownership check uses `createAuthenticatedClient()` (RLS active); storage upsert uses `createAuthenticatedClient()` (RLS active, Supabase sets `owner_id` from JWT so update/delete policies match); DB `photo_url` update uses authenticated client
   - Updated `app/pets/[pet_id]/page.tsx` — was missed in initial migration; switched from cookie-based client to `createAuthenticatedClient()`; this was causing owner's own pet profile to return 404
   - `SUPABASE_SERVICE_ROLE_KEY` must be added to `.env.local` (Supabase Dashboard → Project Settings → Data API → service_role key)
 - Fixed dashboard layout: "Your Pets" and "AI Health Insights" cards now have equal height on desktop (`md:items-stretch` on grid, `h-full` on card and wrapper div)
@@ -85,7 +85,7 @@ change.
 - `ClerkProvider` is inside `<body>`, not wrapping `<html>` — required by Clerk.
 - Auth modals open in-place (`mode="modal"`) to avoid full-page redirects during sign-in/sign-up.
 - `@clerk/nextjs` in this version uses `Show when="signed-in/out"` instead of `SignedIn`/`SignedOut` components.
-- Clerk + Supabase auth uses JWT template pattern (not service-role bypass): `createAuthenticatedClient()` passes a Clerk-signed JWT to Supabase so RLS policies using `auth.jwt() ->> 'sub'` and `get_my_id()` work correctly. Service role key (`createAdminClient()`) is reserved exclusively for storage upsert operations where the application code already enforces ownership.
+- Clerk + Supabase auth uses JWT template pattern (not service-role bypass): `createAuthenticatedClient()` passes a Clerk-signed JWT to Supabase so RLS policies using `auth.jwt() ->> 'sub'` and `get_my_id()` work correctly. `createAdminClient()` (service role) is not used for storage uploads — the authenticated client is used so Supabase sets `owner_id` from the JWT, enabling the owner-scoped update/delete storage policies to match.
 
 ## Session Notes
 
@@ -100,8 +100,9 @@ change.
   - Created `supabase/seed.sql` with 20 dog breeds and 15 cat breeds — all rows include `name`, `species`, `care_food`, `care_exercise`, `care_sleep`, `care_health_notes`
 - Pet profile page `/pets/[pet_id]` is fully implemented: owner-only server-side access guard, pet photo upload, pet info card, latest AI health insight, scrollable scan history, scrollable events list, and a Scan CTA button. Dashboard pet cards link to profile pages. Build clean at 12 routes.
 - Added storage bucket setup (`context/feature-spec/10-sql-bucket.md`):
-  - Created `supabase/migrations/20260713150131_add_storage_buckets.sql` — creates public `pet-images` bucket; RLS policies for authenticated upload (folder must match `get_my_id()`), owner-scoped update/delete, public read, and support/admin full management
-  - Updated `app/api/pets/[pet_id]/upload-photo/route.ts` — `BUCKET` constant changed from `pet-photos` to `pet-images` to match the new migration
+  - Created `supabase/migrations/20260713150131_add_storage_buckets.sql` — creates public `pet-images` bucket; RLS policies for authenticated upload (folder must match `get_my_id()`), owner-scoped update/delete (match on `owner_id`), public read, and support/admin full management
+  - Updated `app/api/pets/[pet_id]/upload-photo/route.ts` — `BUCKET` constant changed from `pet-photos` to `pet-images` to match the new migration; storage upload uses `createAuthenticatedClient()` so Supabase automatically sets `owner_id` from the JWT — enabling the update/delete ownership policies; `createAdminClient()` is not used for storage
+  - Created `supabase/migrations/20260713180433_drop_public_storage_select_policy.sql` — drops the `"Anyone can view pet images"` SELECT policy; public bucket CDN access (direct URLs) does not evaluate `storage.objects` RLS at all, so the policy was unnecessary but allowed unauthenticated enumeration of all storage rows (exposing Clerk user IDs and pet IDs)
   - Build exit 0, TypeScript clean, 12 routes confirmed
 - Updated dashboard with real Supabase data and interactive features (`context/feature-spec/11-dashboard-after-db.md`):
   - `app/api/pets/route.ts` — POST handler; validates auth, name, species; inserts pet into `pets` table; returns `{id, name, species, photo_url}`
