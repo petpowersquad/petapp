@@ -53,7 +53,7 @@ export async function POST(
 
   const { data: pet, error: petError } = await supabase
     .from("pets")
-    .select("id, owner_id")
+    .select("id, owner_id, photo_url")
     .eq("id", pet_id)
     .maybeSingle();
 
@@ -66,17 +66,10 @@ export async function POST(
   }
 
   // ── Upload to Supabase Storage via authenticated client (RLS active) ────────
-  // Using the authenticated client ensures Supabase sets owner_id to the
-  // current user's ID, so the update/delete ownership policies can match.
-  // We avoid upsert:true because Supabase evaluates an upsert against the
-  // UPDATE policy when the object already exists — which requires owner_id
-  // to be set from a prior upload. Instead, remove any existing object first
-  // (DELETE policy applies, harmless if it doesn't exist) then do a plain INSERT.
+  // Upload to a unique key first so the existing photo is preserved if the
+  // upload fails. Only delete the old object after the DB update succeeds.
   const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
-  const storagePath = `${userId}/${pet_id}.${ext}`;
-
-  // Remove existing object if present — ignore errors (object may not exist yet)
-  await supabase.storage.from(BUCKET).remove([storagePath]);
+  const storagePath = `${userId}/${pet_id}-${Date.now()}.${ext}`;
 
   const arrayBuffer = await file.arrayBuffer();
   const fileBuffer = new Uint8Array(arrayBuffer);
@@ -110,10 +103,27 @@ export async function POST(
 
   if (updateError) {
     console.error("[upload-photo] db update error:", updateError);
+    // New object uploaded but DB update failed — clean up the orphaned upload
+    await supabase.storage.from(BUCKET).remove([storagePath]);
     return NextResponse.json(
       { error: "Failed to save photo URL. Please try again." },
       { status: 500 }
     );
+  }
+
+  // ── Best-effort cleanup of the previous object ────────────────────────────
+  const previousUrl = (pet as { photo_url: string | null }).photo_url;
+  if (previousUrl) {
+    // Extract the storage path from the public URL: everything after /object/public/{bucket}/
+    const marker = `/object/public/${BUCKET}/`;
+    const markerIdx = previousUrl.indexOf(marker);
+    if (markerIdx !== -1) {
+      const oldPath = decodeURIComponent(previousUrl.slice(markerIdx + marker.length));
+      // Only remove if it's a different object (guard against same-path edge cases)
+      if (oldPath && oldPath !== storagePath) {
+        await supabase.storage.from(BUCKET).remove([oldPath]);
+      }
+    }
   }
 
   return NextResponse.json({ photo_url: publicUrl });

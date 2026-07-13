@@ -87,7 +87,7 @@ export default function PetImageUpload({
               <Button
                 variant="secondary"
                 size="sm"
-                className="gap-1.5 shadow-sm"
+                className="gap-1.5 shadow-sm hover:text-secondary"
                 onClick={handleClick}
                 disabled={uploading}
                 aria-label="Change pet photo"
@@ -118,7 +118,7 @@ export default function PetImageUpload({
             ) : (
               <>
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--accent-primary)]/10">
-                  <Upload className="h-7 w-7 text-secondary" />
+                  <Upload className="h-7 w-7 text-secondary " />
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-semibold text-primary">

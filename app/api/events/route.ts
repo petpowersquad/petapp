@@ -67,6 +67,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!title || typeof title !== "string" || title.trim().length === 0) {
     return NextResponse.json({ error: "title is required" }, { status: 400 });
   }
+  if (description !== undefined && description !== null && typeof description !== "string") {
+    return NextResponse.json({ error: "description must be a string or null" }, { status: 400 });
+  }
   if (!VALID_EVENT_TYPES.includes(event_type)) {
     return NextResponse.json({ error: `event_type must be one of: ${VALID_EVENT_TYPES.join(", ")}` }, { status: 400 });
   }
@@ -93,7 +96,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     .insert({
       pet_id,
       title: title.trim(),
-      description: description?.trim() ?? null,
+      description: typeof description === "string" ? description.trim() || null : null,
       event_type,
       scheduled_at,
       is_completed: false,

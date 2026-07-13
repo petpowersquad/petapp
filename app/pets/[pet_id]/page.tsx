@@ -19,6 +19,7 @@ import {
   Stethoscope,
 } from "lucide-react";
 import PetImageUpload from "./PetImageUpload";
+import DeletePetButton from "./DeletePetButton";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -180,14 +181,17 @@ export default async function PetProfilePage({
               {typedPet.species} {typedPet.breeds?.[0]?.name ? `· ${typedPet.breeds[0].name}` : ""}
             </p>
           </div>
-        {/* Scan CTA */}
-          <a
-            href="/scan"
-            className="inline-flex items-center gap-2 rounded-lg bg-secondary text-secondary-foreground font-semibold text-sm px-3 h-8 hover:opacity-90 transition-opacity self-start sm:self-auto"
-          >
-            <Scan className="h-4 w-4" />
-            Scan {typedPet.name}
-          </a>
+        {/* Header actions */}
+          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+            <a
+              href="/scan"
+              className="inline-flex items-center gap-2 rounded-lg bg-secondary text-secondary-foreground font-semibold text-sm px-3 h-8 hover:opacity-90 transition-opacity"
+            >
+              <Scan className="h-4 w-4" />
+              Scan {typedPet.name}
+            </a>
+            <DeletePetButton petId={typedPet.id} petName={typedPet.name} />
+          </div>
         </div>
 
         {/* ── Top Grid: Image + Info + Latest Insight ── */}

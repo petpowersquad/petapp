@@ -293,8 +293,9 @@ export default function CalendarClient({ initialEvents, pets }: CalendarClientPr
   const [viewMonth, setViewMonth] = useState(today.getMonth()); // 0-indexed
   const [selectedDate, setSelectedDate] = useState<Date>(today);
   const [modalOpen, setModalOpen] = useState(false);
-  const [deletingId, startDelete] = useTransition();
-  void deletingId; // suppress unused warning
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [, startDelete] = useTransition();
 
   // ── Month navigation ───────────────────────────────────────────────────────
   const prevMonth = () => {
@@ -341,11 +342,16 @@ export default function CalendarClient({ initialEvents, pets }: CalendarClientPr
   };
 
   const handleDelete = (eventId: string) => {
+    setDeleteError(null);
+    setDeletingId(eventId);
     startDelete(async () => {
       const res = await fetch(`/api/events/${eventId}`, { method: "DELETE" });
       if (res.ok) {
         setEvents((prev) => prev.filter((e) => e.id !== eventId));
+      } else {
+        setDeleteError("Failed to delete event. Please try again.");
       }
+      setDeletingId(null);
     });
   };
 
@@ -354,7 +360,7 @@ export default function CalendarClient({ initialEvents, pets }: CalendarClientPr
   };
 
   const formattedSelectedDate = selectedDate.toLocaleDateString("en-US", {
-    weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC",
+    weekday: "long", month: "long", day: "numeric", year: "numeric",
   });
 
   return (
@@ -500,6 +506,10 @@ export default function CalendarClient({ initialEvents, pets }: CalendarClientPr
                     </Button>
                   </div>
                 ) : (
+                  <>
+                    {deleteError && (
+                      <p className="px-4 pt-3 text-xs text-[var(--state-error)] font-medium">{deleteError}</p>
+                    )}
                   <ScrollArea className="h-96 px-4 pt-0">
                     <div className="space-y-3 py-4">
                       {selectedDayEvents.map((ev) => {
@@ -518,7 +528,8 @@ export default function CalendarClient({ initialEvents, pets }: CalendarClientPr
                                 <button
                                   type="button"
                                   onClick={() => handleDelete(ev.id)}
-                                  className="shrink-0 text-[var(--text-muted)] hover:text-[var(--state-error)] transition-colors"
+                                  disabled={deletingId === ev.id}
+                                  className="shrink-0 text-[var(--text-muted)] hover:text-[var(--state-error)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                   aria-label={`Delete ${ev.title}`}
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />
@@ -539,7 +550,7 @@ export default function CalendarClient({ initialEvents, pets }: CalendarClientPr
                               )}
                               <div className="text-[10px] text-[var(--text-muted)]">
                                 {new Date(ev.scheduled_at).toLocaleTimeString("en-US", {
-                                  hour: "numeric", minute: "2-digit", hour12: true, timeZone: "UTC",
+                                  hour: "numeric", minute: "2-digit", hour12: true,
                                 })}
                               </div>
                             </div>
@@ -548,6 +559,7 @@ export default function CalendarClient({ initialEvents, pets }: CalendarClientPr
                       })}
                     </div>
                   </ScrollArea>
+                  </>
                 )}
               </CardContent>
             </Card>
