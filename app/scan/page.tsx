@@ -1,16 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Upload, Camera, FileImage, ShieldAlert, Sparkles, CheckCircle2, ChevronRight, HelpCircle } from "lucide-react";
 
-export default function ScanPage() {
+function ScanPageInner() {
+  const searchParams = useSearchParams();
+  const previewParam = searchParams.get("preview");
+
   const [dragActive, setDragActive] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<boolean>(false);
+
+  // Seed with the image URL passed from the Add Pet flow
+  useEffect(() => {
+    if (previewParam && !selectedImage) {
+      setSelectedImage(previewParam);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewParam]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -24,7 +36,10 @@ export default function ScanPage() {
 
   const revokeAndClear = () => {
     setSelectedImage((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
+      // Only revoke object URLs we created ourselves (not preview params from other pages)
+      if (prev && prev.startsWith("blob:") && prev !== previewParam) {
+        URL.revokeObjectURL(prev);
+      }
       return null;
     });
   };
@@ -244,5 +259,17 @@ export default function ScanPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ScanPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 bg-background p-6 md:p-8 flex items-center justify-center">
+        <p className="text-sm text-text-muted">Loading scanner…</p>
+      </div>
+    }>
+      <ScanPageInner />
+    </Suspense>
   );
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { cookies } from "next/headers";
-import { createClient } from "@/utils/supabase/server";
+import { createAuthenticatedClient } from "@/utils/supabase/server-auth";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 const BUCKET = "pet-images";
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -46,9 +46,11 @@ export async function POST(
     );
   }
 
-  // ── Verify ownership ──────────────────────────────────────────────────────
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  // ── Verify ownership via authenticated client (RLS active) ────────────────
+  const supabase = await createAuthenticatedClient();
+  if (!supabase) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const { data: pet, error: petError } = await supabase
     .from("pets")
@@ -64,18 +66,20 @@ export async function POST(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  // ── Upload to Supabase Storage ────────────────────────────────────────────
+  // ── Upload to Supabase Storage via admin client (bypasses storage RLS) ────
+  const adminSupabase = createAdminClient();
+
   const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
   const storagePath = `${userId}/${pet_id}.${ext}`;
 
   const arrayBuffer = await file.arrayBuffer();
   const fileBuffer = new Uint8Array(arrayBuffer);
 
-  const { error: uploadError } = await supabase.storage
+  const { error: uploadError } = await adminSupabase.storage
     .from(BUCKET)
     .upload(storagePath, fileBuffer, {
       contentType: file.type,
-      upsert: true, // overwrite if pet already has a photo
+      upsert: true,
     });
 
   if (uploadError) {
@@ -87,13 +91,13 @@ export async function POST(
   }
 
   // ── Get public URL ────────────────────────────────────────────────────────
-  const { data: urlData } = supabase.storage
+  const { data: urlData } = adminSupabase.storage
     .from(BUCKET)
     .getPublicUrl(storagePath);
 
   const publicUrl = urlData.publicUrl;
 
-  // ── Persist URL to pets row ───────────────────────────────────────────────
+  // ── Persist URL to pets row via authenticated client (RLS active) ─────────
   const { error: updateError } = await supabase
     .from("pets")
     .update({ photo_url: publicUrl })

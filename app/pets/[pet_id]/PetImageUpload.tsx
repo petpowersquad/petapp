@@ -67,7 +67,7 @@ export default function PetImageUpload({
 
   return (
     <Card className="border-border shadow-sm overflow-hidden">
-      <CardContent className="p-0 relative group">
+      <CardContent className="p-0 relative group -mb-4 -mt-4">
         {currentUrl ? (
           /* ── Has photo ─────────────────────────────────── */
           <div className="relative aspect-square w-full">
@@ -80,7 +80,7 @@ export default function PetImageUpload({
               priority
             />
             {/* Hover overlay */}
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
               <Button
                 variant="secondary"
                 size="sm"

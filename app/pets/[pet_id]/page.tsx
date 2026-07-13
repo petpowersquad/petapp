@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import { cookies } from "next/headers";
-import { createClient } from "@/utils/supabase/server";
+import { createAuthenticatedClient } from "@/utils/supabase/server-auth";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -116,8 +115,8 @@ export default async function PetProfilePage({
   if (!userId) notFound();
 
   // ── Supabase data ─────────────────────────────────────────────────────────
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = await createAuthenticatedClient();
+  if (!supabase) notFound();
 
   // Fetch the pet (RLS already limits to owner, but we double-check owner_id
   // explicitly so non-owners get 404 rather than an empty result that might

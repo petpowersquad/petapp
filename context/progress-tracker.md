@@ -86,3 +86,10 @@ change.
   - Created `supabase/migrations/20260713150131_add_storage_buckets.sql` — creates public `pet-images` bucket; RLS policies for authenticated upload (folder must match `get_my_id()`), owner-scoped update/delete, public read, and support/admin full management
   - Updated `app/api/pets/[pet_id]/upload-photo/route.ts` — `BUCKET` constant changed from `pet-photos` to `pet-images` to match the new migration
   - Build exit 0, TypeScript clean, 12 routes confirmed
+- Updated dashboard with real Supabase data and interactive features (`context/feature-spec/11-dashboard-after-db.md`):
+  - `app/api/pets/route.ts` — POST handler; validates auth, name, species; inserts pet into `pets` table; returns `{id, name, species, photo_url}`
+  - `app/api/events/[event_id]/toggle/route.ts` — PATCH handler; toggles `is_completed` on a `pet_events` row; protected by RLS
+  - `app/dashboard/DashboardClient.tsx` — `"use client"` component containing: Add Pet modal (manual + AI-image tabs, JPEG/PNG upload with progress bar, preview, form fields, submit to `/api/pets` then `/api/pets/[id]/upload-photo`), Care Checklist with Tabs (To Do / Completed), per-task toggle (Circle → CheckCircle2, optimistic update), scrollable lists, Health Insights (warning scans only, empty state), Recent Scans (scrollable, empty state), toast notifications (bottom-right, success/error), redirect to `/scan?preview=...` after pet creation
+  - `app/dashboard/page.tsx` — rewritten as async RSC; fetches pets, scans (last 20), and weekly events from Supabase; passes to `DashboardClient`
+  - `app/scan/page.tsx` — refactored into `ScanPageInner` + `export default ScanPage` with `<Suspense>` wrapper; reads `?preview=` query param via `useSearchParams` and seeds image state so newly created pets' photos show immediately
+  - Build exit 0, TypeScript clean, 15 routes confirmed
