@@ -50,7 +50,7 @@ change.
 
 ## In Progress
 
-- None
+- Scan page pet selector dropdown (`context/feature-spec/12-scan-pet.md`)
 
 ## Next Up
 
@@ -111,3 +111,9 @@ change.
   - `app/dashboard/page.tsx` — rewritten as async RSC; fetches pets, scans (last 20), and weekly events from Supabase; passes to `DashboardClient`
   - `app/scan/page.tsx` — refactored into `ScanPageInner` + `export default ScanPage` with `<Suspense>` wrapper; reads `?preview=` query param via `useSearchParams` and seeds image state so newly created pets' photos show immediately
   - Build exit 0, TypeScript clean, 15 routes confirmed
+- Implemented pet selector dropdown on scan page (`context/feature-spec/12-scan-pet.md`):
+  - `app/api/pets/route.ts` — added `GET` handler; returns `[{id, name, species}]` ordered by name, RLS-enforced via authenticated Supabase client
+  - `components/ui/select.tsx` — installed shadcn Select component
+  - `app/scan/page.tsx` — rewritten as async RSC; fetches user's pets server-side via `createAuthenticatedClient()`, passes to `ScanClient`
+  - `app/scan/ScanClient.tsx` — new `"use client"` component; contains pet selector in page header (shadcn Select, styled with CSS tokens, responsive: stacks on mobile, side-by-side on `sm+`); empty state shown when user has no pets; `Analyze Image` button disabled until a pet is selected; selected pet name shown in card header and triage report; reads `?petId=` query param to pre-select; `Suspense` wrapper retained for `useSearchParams`
+  - Build exit 0, TypeScript clean, 13 routes confirmed

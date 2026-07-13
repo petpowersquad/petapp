@@ -12,6 +12,30 @@ interface CreatePetBody {
   photo_url?: string | null;
 }
 
+export async function GET(): Promise<NextResponse> {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const supabase = await createAuthenticatedClient();
+  if (!supabase) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { data, error } = await supabase
+    .from("pets")
+    .select("id, name, species")
+    .order("name");
+
+  if (error) {
+    console.error("[GET /api/pets] fetch error:", error);
+    return NextResponse.json({ error: "Failed to fetch pets." }, { status: 500 });
+  }
+
+  return NextResponse.json(data ?? []);
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // ── Auth ───────────────────────────────────────────────────────────────────
   const { userId } = await auth();
