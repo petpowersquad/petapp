@@ -3,7 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PawPrint, Menu, X, User } from "lucide-react";
+import { PawPrint, Menu, X } from "lucide-react";
+import {
+  SignInButton,
+  SignUpButton,
+  UserButton,
+  Show,
+} from "@clerk/nextjs";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -11,7 +17,7 @@ const navigationItems = [
   { name: "About", href: "/about" },
   { name: "Dashboard", href: "/dashboard" },
   { name: "Calendar", href: "/calendar" },
-  { name: "Vet Finder", href: "/vets" },
+  /*{ name: "Vet Finder", href: "/vets" },*/
 ];
 
 export function Header() {
@@ -22,6 +28,7 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border/10 bg-primary text-white shadow-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
+
           {/* Left: Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2 group">
@@ -54,19 +61,50 @@ export function Header() {
                 </Link>
               );
             })}
-            
-            {/* Scan Pet CTA Link */}
-            <Link href="/scan" className={buttonVariants({ variant: "secondary", size: "sm", className: "ml-2 font-semibold shadow-sm hover:scale-[1.02] active:scale-[0.98] hover:text-secondary transition-all" })}>
+
+            {/* Scan Pet CTA */}
+            <Link
+              href="/scan"
+              className={buttonVariants({
+                variant: "secondary",
+                size: "sm",
+                className:
+                  "ml-2 font-semibold shadow-sm hover:scale-[1.02] active:scale-[0.98] hover:text-secondary transition-all",
+              })}
+            >
               Scan Pet
             </Link>
           </nav>
 
-          {/* Far Right: User Profile / Auth Placeholder */}
-          <div className="hidden md:flex items-center gap-4">
+          {/* Far Right: Auth Controls — Desktop */}
+          <div className="hidden md:flex items-center gap-3">
             <div className="h-8 w-px bg-white/20" />
-            <button className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all border border-white/10 hover:border-white/20 group">
-              <User className="h-4 w-4 text-white/80 group-hover:text-secondary transition-colors" />
-            </button>
+
+            {/* Signed-out: Sign In + Sign Up buttons */}
+            <Show when="signed-out">
+              <SignInButton mode="modal">
+                <button className="text-sm font-medium text-white/80 hover:text-secondary transition-colors px-3 py-1.5 rounded-lg hover:bg-white/10">
+                  Sign In
+                </button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button className="text-sm font-semibold bg-secondary text-primary px-4 py-1.5 rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-sm">
+                  Sign Up
+                </button>
+              </SignUpButton>
+            </Show>
+
+            {/* Signed-in: User avatar button */}
+            <Show when="signed-in">
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox:
+                      "h-8 w-8 ring-2 ring-secondary/60 hover:ring-secondary transition-all",
+                  },
+                }}
+              />
+            </Show>
           </div>
 
           {/* Mobile Menu Button */}
@@ -95,8 +133,8 @@ export function Header() {
                   onClick={() => setIsOpen(false)}
                   className={cn(
                     "block px-3 py-2 rounded-md text-base font-medium transition-colors",
-                    isActive 
-                      ? "bg-white/10 text-secondary" 
+                    isActive
+                      ? "bg-white/10 text-secondary"
                       : "text-white/80 hover:bg-white/5 hover:text-white"
                   )}
                 >
@@ -105,16 +143,54 @@ export function Header() {
               );
             })}
           </div>
+
           <div className="pt-2 border-t border-white/10 flex flex-col gap-3">
-            <Link href="/scan" onClick={() => setIsOpen(false)} className={buttonVariants({ variant: "secondary", className: "w-full justify-center font-semibold" })}>
+            <Link
+              href="/scan"
+              onClick={() => setIsOpen(false)}
+              className={buttonVariants({
+                variant: "secondary",
+                className: "w-full justify-center font-semibold",
+              })}
+            >
               Scan Pet
             </Link>
-            <div className="flex items-center gap-3 px-3 py-2 text-white/80">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
-                <User className="h-4 w-4" />
+
+            {/* Mobile Auth Controls */}
+            <Show when="signed-out">
+              <SignInButton mode="modal">
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="w-full text-center text-sm font-medium text-white/80 hover:text-secondary transition-colors px-3 py-2 rounded-lg hover:bg-white/10"
+                >
+                  Sign In
+                </button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="w-full text-center text-sm font-semibold bg-secondary text-primary px-4 py-2 rounded-lg hover:opacity-90 transition-all"
+                >
+                  Sign Up
+                </button>
+              </SignUpButton>
+            </Show>
+
+            <Show when="signed-in">
+              <div className="flex items-center gap-3 px-3 py-2">
+                <UserButton
+                  appearance={{
+                    elements: {
+                      avatarBox:
+                        "h-8 w-8 ring-2 ring-secondary/60 hover:ring-secondary transition-all",
+                    },
+                  }}
+                />
+                <span className="text-sm font-medium text-white/80">
+                  My Account
+                </span>
               </div>
-              <span className="text-sm font-medium">My Account</span>
-            </div>
+            </Show>
           </div>
         </div>
       )}

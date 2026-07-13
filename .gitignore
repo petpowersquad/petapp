@@ -10,6 +10,7 @@
 !.yarn/releases
 !.yarn/versions
 /guide-imgs
+/.vscode
 
 # testing
 /coverage
