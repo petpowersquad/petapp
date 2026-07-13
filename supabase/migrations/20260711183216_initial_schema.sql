@@ -10,6 +10,14 @@ as $$
   select coalesce(auth.jwt() ->> 'app_role', 'pet_owner');
 $$;
 
+-- Helper: extract Clerk user ID (sub) from JWT as text
+create or replace function public.get_my_id()
+returns text
+language sql stable
+as $$
+  select auth.jwt() ->> 'sub';
+$$;
+
 -- Breeds (reference table, public read)
 create table public.breeds (
   id uuid primary key default gen_random_uuid(),
@@ -117,6 +125,7 @@ create table public.vets (
 -- ============================================================
 -- Enable RLS
 -- ============================================================
+alter table public.breeds enable row level security;
 alter table public.pets enable row level security;
 alter table public.health_scans enable row level security;
 alter table public.pet_events enable row level security;
@@ -128,54 +137,58 @@ alter table public.vets enable row level security;
 -- Policies
 -- ============================================================
 
+-- Breeds (public read-only; INSERT/UPDATE/DELETE intentionally have no policy)
+create policy "Public can read breeds" on public.breeds
+  for select using ( true );
+
 -- Pets
 create policy "Owners can view their pets" on public.pets
-  for select using ( owner_id = auth.uid() );
+  for select using ( owner_id = get_my_id() );
 create policy "Support and admins can view all pets" on public.pets
   for select using ( get_my_role() in ('support', 'admin') );
 create policy "Owners can insert pets" on public.pets
-  for insert with check ( owner_id = auth.uid() );
+  for insert with check ( owner_id = get_my_id() );
 create policy "Owners can update their pets" on public.pets
-  for update using ( owner_id = auth.uid() ) with check ( owner_id = auth.uid() );
+  for update using ( owner_id = get_my_id() ) with check ( owner_id = get_my_id() );
 create policy "Owners can delete their pets" on public.pets
-  for delete using ( owner_id = auth.uid() );
+  for delete using ( owner_id = get_my_id() );
 
 -- Health Scans
 create policy "Owners can view scans" on public.health_scans
   for select using (
-    exists ( select 1 from public.pets where pets.id = health_scans.pet_id and pets.owner_id = auth.uid() )
+    exists ( select 1 from public.pets where pets.id = health_scans.pet_id and pets.owner_id = get_my_id() )
   );
 create policy "Support and admins can view all scans" on public.health_scans
   for select using ( get_my_role() in ('support', 'admin') );
 create policy "Owners can insert scans" on public.health_scans
   for insert with check (
-    exists ( select 1 from public.pets where pets.id = health_scans.pet_id and pets.owner_id = auth.uid() )
+    exists ( select 1 from public.pets where pets.id = health_scans.pet_id and pets.owner_id = get_my_id() )
   );
 
 -- Pet Events
 create policy "Owners can manage events" on public.pet_events
   for all using (
-    exists ( select 1 from public.pets where pets.id = pet_events.pet_id and pets.owner_id = auth.uid() )
+    exists ( select 1 from public.pets where pets.id = pet_events.pet_id and pets.owner_id = get_my_id() )
   ) with check (
-    exists ( select 1 from public.pets where pets.id = pet_events.pet_id and pets.owner_id = auth.uid() )
+    exists ( select 1 from public.pets where pets.id = pet_events.pet_id and pets.owner_id = get_my_id() )
   );
 create policy "Support and admins can view all events" on public.pet_events
   for select using ( get_my_role() in ('support', 'admin') );
 
 -- Tickets
 create policy "Users can view own tickets" on public.tickets
-  for select using ( created_by = auth.uid() );
+  for select using ( created_by = get_my_id() );
 create policy "Support can view assigned or open tickets" on public.tickets
   for select using (
-    get_my_role() in ('support', 'admin') and (assigned_to = auth.uid() or status = 'open')
+    get_my_role() in ('support', 'admin') and (assigned_to = get_my_id() or status = 'open')
   );
 create policy "Users can create tickets" on public.tickets
-  for insert with check ( created_by = auth.uid() );
+  for insert with check ( created_by = get_my_id() );
 create policy "Users can update own tickets" on public.tickets
-  for update using ( created_by = auth.uid() ) with check ( created_by = auth.uid() );
+  for update using ( created_by = get_my_id() ) with check ( created_by = get_my_id() );
 create policy "Support can update assigned tickets" on public.tickets
   for update using (
-    get_my_role() in ('support', 'admin') and (assigned_to = auth.uid() or get_my_role() = 'admin')
+    get_my_role() in ('support', 'admin') and (assigned_to = get_my_id() or get_my_role() = 'admin')
   );
 
 -- Ticket Messages
@@ -184,16 +197,16 @@ create policy "Participants can view messages" on public.ticket_messages
     exists (
       select 1 from public.tickets
       where tickets.id = ticket_messages.ticket_id
-        and (tickets.created_by = auth.uid() or tickets.assigned_to = auth.uid())
+        and (tickets.created_by = get_my_id() or tickets.assigned_to = get_my_id())
     ) or get_my_role() = 'admin'
   );
 create policy "Participants can insert messages" on public.ticket_messages
   for insert with check (
-    sender_id = auth.uid() and (
+    sender_id = get_my_id() and (
       exists (
         select 1 from public.tickets
         where tickets.id = ticket_messages.ticket_id
-          and (tickets.created_by = auth.uid() or tickets.assigned_to = auth.uid())
+          and (tickets.created_by = get_my_id() or tickets.assigned_to = get_my_id())
       ) or get_my_role() = 'admin'
     )
   );
