@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createAuthenticatedClient } from "@/utils/supabase/server-auth";
-import { createAdminClient } from "@/utils/supabase/admin";
 
 const BUCKET = "pet-images";
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -66,16 +65,16 @@ export async function POST(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  // ── Upload to Supabase Storage via admin client (bypasses storage RLS) ────
-  const adminSupabase = createAdminClient();
-
+  // ── Upload to Supabase Storage via authenticated client (RLS active) ────────
+  // Using the authenticated client ensures Supabase sets owner_id to the
+  // current user's ID, so the update/delete ownership policies can match.
   const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
   const storagePath = `${userId}/${pet_id}.${ext}`;
 
   const arrayBuffer = await file.arrayBuffer();
   const fileBuffer = new Uint8Array(arrayBuffer);
 
-  const { error: uploadError } = await adminSupabase.storage
+  const { error: uploadError } = await supabase.storage
     .from(BUCKET)
     .upload(storagePath, fileBuffer, {
       contentType: file.type,
@@ -91,7 +90,7 @@ export async function POST(
   }
 
   // ── Get public URL ────────────────────────────────────────────────────────
-  const { data: urlData } = adminSupabase.storage
+  const { data: urlData } = supabase.storage
     .from(BUCKET)
     .getPublicUrl(storagePath);
 

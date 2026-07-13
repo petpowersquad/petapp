@@ -60,6 +60,24 @@ change.
 
 - None at the moment.
 
+## Recent Changes (Session: 2026-07-13)
+
+## Recent Changes (Session: 2026-07-13)
+
+- Fixed RLS violation on `POST /api/pets` (code `42501`) by migrating from service-role bypass to Clerk JWT + Supabase RLS (Option 1):
+  - Created Clerk JWT template named `supabase` in Clerk Dashboard (Configure → JWT Templates → Supabase); enabled custom signing key (HS256) using Supabase project JWT secret; `sub` is injected automatically by Clerk (reserved claim)
+  - Created `utils/supabase/server-auth.ts` — `createAuthenticatedClient()` calls `getToken({ template: "supabase" })` and passes the JWT as `Authorization: Bearer` header; disables Supabase session persistence since Clerk owns auth
+  - Created `utils/supabase/admin.ts` — `createAdminClient()` using `SUPABASE_SERVICE_ROLE_KEY`; used exclusively for storage upsert in upload-photo route
+  - Updated `app/api/pets/route.ts` — switched from cookie-based `createClient` to `createAuthenticatedClient()`; RLS now enforces insert correctly
+  - Updated `app/api/events/[event_id]/toggle/route.ts` — same switch; RLS policy `Owners can manage events` now active
+  - Updated `app/dashboard/page.tsx` — switched to `createAuthenticatedClient()`; removed `cookies()` dependency
+  - Updated `app/api/pets/[pet_id]/upload-photo/route.ts` — DB ownership check uses `createAuthenticatedClient()` (RLS active); storage upsert uses `createAdminClient()` (bypasses storage RLS for upsert); DB `photo_url` update uses authenticated client
+  - Updated `app/pets/[pet_id]/page.tsx` — was missed in initial migration; switched from cookie-based client to `createAuthenticatedClient()`; this was causing owner's own pet profile to return 404
+  - `SUPABASE_SERVICE_ROLE_KEY` must be added to `.env.local` (Supabase Dashboard → Project Settings → Data API → service_role key)
+- Fixed dashboard layout: "Your Pets" and "AI Health Insights" cards now have equal height on desktop (`md:items-stretch` on grid, `h-full` on card and wrapper div)
+- Restyled pet cards in "Your Pets" section: Forest Green (`--bg-brand-dark`) background, white pet name, white/60 muted subtext, honey amber "Active" badge
+- Restyled Care Checklist tabs: active tab uses Forest Green background with white text; inactive tab uses muted grey; count badge on active tab uses honey amber
+
 ## Architecture Decisions
 
 - Kept styling minimal using Tailwind CSS v4 directives.
@@ -69,6 +87,7 @@ change.
 - `ClerkProvider` is inside `<body>`, not wrapping `<html>` — required by Clerk.
 - Auth modals open in-place (`mode="modal"`) to avoid full-page redirects during sign-in/sign-up.
 - `@clerk/nextjs` in this version uses `Show when="signed-in/out"` instead of `SignedIn`/`SignedOut` components.
+- Clerk + Supabase auth uses JWT template pattern (not service-role bypass): `createAuthenticatedClient()` passes a Clerk-signed JWT to Supabase so RLS policies using `auth.jwt() ->> 'sub'` and `get_my_id()` work correctly. Service role key (`createAdminClient()`) is reserved exclusively for storage upsert operations where the application code already enforces ownership.
 
 ## Session Notes
 

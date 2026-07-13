@@ -112,11 +112,11 @@ function AddPetModal({ open, onClose, onSuccess, onToast }: AddPetModalProps) {
   const [isSubmitting, startSubmit] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const resetForm = useCallback(() => {
+  const resetForm = useCallback((skipRevoke = false) => {
     setMode("manual");
     setName(""); setSpecies("dog"); setBreed(""); setAge(""); setAgeUnit("years"); setWeight("");
     setImageFile(null);
-    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    if (!skipRevoke && imagePreview) URL.revokeObjectURL(imagePreview);
     setImagePreview(null);
     setUploadProgress(0);
     setIsUploading(false);
@@ -214,7 +214,10 @@ function AddPetModal({ open, onClose, onSuccess, onToast }: AddPetModalProps) {
 
         onToast("success", `${newPet.name}'s profile created successfully!`);
         onSuccess(petForCallback, imagePreview);
-        handleClose();
+        // Pass skipRevoke=true: the blob URL was forwarded to the scan page,
+        // which owns cleanup via its own revokeAndClear guard.
+        resetForm(true);
+        onClose();
       } catch (err) {
         console.log(err instanceof Error ? err.message : "Something went wrong.");
         onToast("error", err instanceof Error ? err.message : "Something went wrong.");
@@ -374,7 +377,13 @@ function AddPetModal({ open, onClose, onSuccess, onToast }: AddPetModalProps) {
 
 // ─── Care Checklist ───────────────────────────────────────────────────────────
 
-function CareChecklist({ initialEvents }: { initialEvents: PetEvent[] }) {
+function CareChecklist({
+  initialEvents,
+  onToast,
+}: {
+  initialEvents: PetEvent[];
+  onToast: (type: "success" | "error", message: string) => void;
+}) {
   const [events, setEvents] = useState<PetEvent[]>(initialEvents);
   const [activeTab, setActiveTab] = useState("todo");
 
@@ -387,16 +396,20 @@ function CareChecklist({ initialEvents }: { initialEvents: PetEvent[] }) {
       prev.map((e) => (e.id === id ? { ...e, is_completed: !current } : e))
     );
     try {
-      await fetch(`/api/events/${id}/toggle`, {
+      const res = await fetch(`/api/events/${id}/toggle`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ is_completed: !current }),
       });
+      if (!res.ok) {
+        throw new Error(`Update failed (${res.status})`);
+      }
     } catch {
-      // Roll back on failure
+      // Roll back on network error or non-2xx response
       setEvents((prev) =>
         prev.map((e) => (e.id === id ? { ...e, is_completed: current } : e))
       );
+      onToast("error", "Could not update event. Please try again.");
     }
   };
 
@@ -431,7 +444,7 @@ function CareChecklist({ initialEvents }: { initialEvents: PetEvent[] }) {
             {ev.title}
           </div>
           <div className="text-xs text-[var(--text-muted)]">
-            {ev.pets?.[0]?.name ?? "Unknown"} · {new Date(ev.scheduled_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            {ev.pets?.[0]?.name ?? "Unknown"} · {new Date(ev.scheduled_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}
           </div>
         </div>
       </div>
@@ -523,7 +536,7 @@ function RecentScans({ scans }: { scans: HealthScan[] }) {
                     <div className="flex justify-between items-start mb-1">
                       <span className="text-sm font-semibold text-[var(--text-primary)]">{scan.pets?.[0]?.name ?? "Unknown"}</span>
                       <span className="text-xs text-[var(--text-muted)]">
-                        {new Date(scan.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        {new Date(scan.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}
                       </span>
                     </div>
                     <p className="text-xs text-[var(--text-muted)] line-clamp-2">{summary}</p>
@@ -702,7 +715,7 @@ export default function DashboardClient({ initialPets, initialScans, initialEven
 
           {/* Checklist & Scans */}
           <div className="grid gap-6 md:grid-cols-2">
-            <CareChecklist initialEvents={initialEvents} />
+            <CareChecklist initialEvents={initialEvents} onToast={addToast} />
             <RecentScans scans={scans} />
           </div>
 

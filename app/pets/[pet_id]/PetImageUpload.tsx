@@ -61,6 +61,9 @@ export default function PetImageUpload({
         setCurrentUrl(body.photo_url);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Upload failed");
+      } finally {
+        // Reset so selecting the same file again triggers onChange
+        if (inputRef.current) inputRef.current.value = "";
       }
     });
   }

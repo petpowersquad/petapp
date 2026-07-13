@@ -12,17 +12,9 @@ function ScanPageInner() {
   const previewParam = searchParams.get("preview");
 
   const [dragActive, setDragActive] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(previewParam);
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<boolean>(false);
-
-  // Seed with the image URL passed from the Add Pet flow
-  useEffect(() => {
-    if (previewParam && !selectedImage) {
-      setSelectedImage(previewParam);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewParam]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -34,10 +26,22 @@ function ScanPageInner() {
     }
   };
 
+  // Revoke the blob URL on unmount — covers both the transferred previewParam
+  // blob and any locally-created blob that was never explicitly cleared.
+  useEffect(() => {
+    return () => {
+      setSelectedImage((prev) => {
+        if (prev && prev.startsWith("blob:")) URL.revokeObjectURL(prev);
+        return prev;
+      });
+    };
+  }, []);
+
   const revokeAndClear = () => {
     setSelectedImage((prev) => {
-      // Only revoke object URLs we created ourselves (not preview params from other pages)
-      if (prev && prev.startsWith("blob:") && prev !== previewParam) {
+      // Revoke all blob URLs — including the transferred previewParam blob,
+      // which this component now owns.
+      if (prev && prev.startsWith("blob:")) {
         URL.revokeObjectURL(prev);
       }
       return null;
