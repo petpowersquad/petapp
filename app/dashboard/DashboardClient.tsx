@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useTransition, useCallback } from "react";
+import { useState, useRef, useTransition, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -34,8 +34,8 @@ export interface HealthScan {
   photo_url: string;
   raw_response: Record<string, unknown>;
   created_at: string;
-  // Supabase returns joined rows as an array; we use index [0]
-  pets: { name: string }[] | null;
+  // Supabase returns joined rows as an object on to-one joins
+  pets: { name: string } | null;
 }
 
 export interface PetEvent {
@@ -46,8 +46,8 @@ export interface PetEvent {
   event_type: string;
   scheduled_at: string;
   is_completed: boolean;
-  // Supabase returns joined rows as an array; we use index [0]
-  pets: { name: string }[] | null;
+  // Supabase returns joined rows as an object on to-one joins
+  pets: { name: string } | null;
 }
 
 // ─── Toast ───────────────────────────────────────────────────────────────────
@@ -387,6 +387,17 @@ function CareChecklist({
   const [events, setEvents] = useState<PetEvent[]>(initialEvents);
   const [activeTab, setActiveTab] = useState("todo");
 
+  // Re-fetch this week's events on mount so events added via the calendar
+  // page are visible without a full page reload.
+  useEffect(() => {
+    fetch("/api/events?range=week")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: PetEvent[] | null) => {
+        if (data) setEvents(data);
+      })
+      .catch(() => { /* silently ignore — SSR data is still shown */ });
+  }, []);
+
   const todo = events.filter((e) => !e.is_completed);
   const done = events.filter((e) => e.is_completed);
 
@@ -444,7 +455,7 @@ function CareChecklist({
             {ev.title}
           </div>
           <div className="text-xs text-[var(--text-muted)]">
-            {ev.pets?.[0]?.name ?? "Unknown"} · {new Date(ev.scheduled_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}
+            {ev.pets?.name ?? "Unknown"} · {new Date(ev.scheduled_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}
           </div>
         </div>
       </div>
@@ -534,7 +545,7 @@ function RecentScans({ scans }: { scans: HealthScan[] }) {
                 return (
                   <div key={scan.id} className="p-3.5 rounded-lg border border-[var(--border-default)] bg-card hover:bg-slate-50/50 transition-colors">
                     <div className="flex justify-between items-start mb-1">
-                      <span className="text-sm font-semibold text-[var(--text-primary)]">{scan.pets?.[0]?.name ?? "Unknown"}</span>
+                      <span className="text-sm font-semibold text-[var(--text-primary)]">{scan.pets?.name ?? "Unknown"}</span>
                       <span className="text-xs text-[var(--text-muted)]">
                         {new Date(scan.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}
                       </span>
@@ -588,7 +599,7 @@ function HealthInsights({ scans }: { scans: HealthScan[] }) {
                   <div key={scan.id} className="rounded-xl bg-amber-50 p-4 border border-amber-100 text-amber-900 text-xs leading-relaxed">
                     <div className="flex items-center gap-1.5 font-bold mb-1">
                       <AlertTriangle className="h-4 w-4 text-[var(--state-warning)]" />
-                      {scan.pets?.[0]?.name ?? "A pet"} requires attention
+                      {scan.pets?.name ?? "A pet"} requires attention
                     </div>
                     <p>{summary}</p>
                   </div>

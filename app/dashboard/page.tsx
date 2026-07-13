@@ -39,8 +39,8 @@ export default async function DashboardPage() {
     .order("scheduled_at", { ascending: true });
 
   const pets = (petsData as Pet[]) ?? [];
-  const scans = (scansData as HealthScan[]) ?? [];
-  const events = (eventsData as PetEvent[]) ?? [];
+  const scans = (scansData as unknown as HealthScan[]) ?? [];
+  const events = (eventsData as unknown as PetEvent[]) ?? [];
 
   return (
     <DashboardClient

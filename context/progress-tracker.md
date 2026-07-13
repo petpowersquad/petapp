@@ -111,3 +111,16 @@ change.
   - `app/dashboard/page.tsx` — rewritten as async RSC; fetches pets, scans (last 20), and weekly events from Supabase; passes to `DashboardClient`
   - `app/scan/page.tsx` — refactored into `ScanPageInner` + `export default ScanPage` with `<Suspense>` wrapper; reads `?preview=` query param via `useSearchParams` and seeds image state so newly created pets' photos show immediately
   - Build exit 0, TypeScript clean, 15 routes confirmed
+- Implemented pet selector dropdown on scan page (`context/feature-spec/12-scan-pet.md`):
+  - `app/api/pets/route.ts` — added `GET` handler; returns `[{id, name, species}]` ordered by name, RLS-enforced via authenticated Supabase client
+  - `components/ui/select.tsx` — installed shadcn Select component (Base UI); `itemToStringLabel` prop on `Select.Root` used to resolve selected item display text — `textValue` prop does not exist on Base UI `SelectItem`
+  - `app/scan/page.tsx` — rewritten as async RSC; fetches user's pets server-side via `createAuthenticatedClient()`, passes to `ScanClient`
+  - `app/scan/ScanClient.tsx` — new `"use client"` component; pet selector in card header using shadcn Select; `Analyze Image` button disabled until a pet is selected; reads `?petId=` query param to pre-select
+  - Build exit 0, TypeScript clean, 13 routes confirmed
+- Implemented full calendar functionality (`context/feature-spec/13-calendar-functionality.md`):
+  - `app/api/events/route.ts` — `GET` (with optional `?range=week` filter) and `POST` handlers; POST validates pet ownership via RLS before inserting; GET returns all or this-week's events
+  - `app/api/events/[event_id]/route.ts` — `DELETE` handler; verifies ownership via RLS, returns 404 if no row matched
+  - `app/calendar/CalendarClient.tsx` — new `"use client"` component: clickable day cells update the schedule panel, month navigation (prev/next), add event modal (title, description, event type dropdown, datetime picker, pet selector) with backdrop blur overlay matching AddPetModal pattern, delete with bin icon, per-pet color coding via stable palette, real-time state updates on create/delete
+  - `app/calendar/page.tsx` — rewritten as async RSC; fetches all user events + pets server-side, passes to `CalendarClient`
+  - `app/dashboard/DashboardClient.tsx` — `CareChecklist` now re-fetches `GET /api/events?range=week` on mount so events added via calendar appear without full page reload
+  - Build exit 0, TypeScript clean, 15 routes confirmed
