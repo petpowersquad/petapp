@@ -68,8 +68,15 @@ export async function POST(
   // ── Upload to Supabase Storage via authenticated client (RLS active) ────────
   // Using the authenticated client ensures Supabase sets owner_id to the
   // current user's ID, so the update/delete ownership policies can match.
+  // We avoid upsert:true because Supabase evaluates an upsert against the
+  // UPDATE policy when the object already exists — which requires owner_id
+  // to be set from a prior upload. Instead, remove any existing object first
+  // (DELETE policy applies, harmless if it doesn't exist) then do a plain INSERT.
   const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
   const storagePath = `${userId}/${pet_id}.${ext}`;
+
+  // Remove existing object if present — ignore errors (object may not exist yet)
+  await supabase.storage.from(BUCKET).remove([storagePath]);
 
   const arrayBuffer = await file.arrayBuffer();
   const fileBuffer = new Uint8Array(arrayBuffer);
@@ -78,7 +85,6 @@ export async function POST(
     .from(BUCKET)
     .upload(storagePath, fileBuffer, {
       contentType: file.type,
-      upsert: true,
     });
 
   if (uploadError) {
